@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import path = require('path');
 
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../prod.env') });
 
 export type ConfigProps = {
     dbHostUrl: string;

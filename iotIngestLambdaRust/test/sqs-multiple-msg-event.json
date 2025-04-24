@@ -1,0 +1,68 @@
+{
+    "Records": [
+        {
+            "messageId": "1",
+            "receiptHandle": "abc123",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"78:21:84:9C:A9:AC\",\"client_id\":\"device1\",\"temp\":{\"number\":4,\"value\":[-127,-127,-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF1\",\"FFFFFFFFFFFFFFF2\",\"FFFFFFFFFFFFFFF3\",\"FFFFFFFFFFFFFFF4\"]},\"modbus\":{\"number\":5,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\",\"FFFF\",\"FFFF\",\"FFFF\"],\"slave\":[1,1,1,1,254],\"funct\":[4,4,4,4,4],\"addr\":[0,2,4,5,3],\"bytes\":[4,4,2,2,2]},\"ip\":\"192.168.68.103\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
+            "attrApproximateReceiveCount": "1",
+            "SentTimestamp": "1234567890123",
+            "SenderId": "123456789012",
+            "Apibutes": {
+                "proximateFirstReceiveTimestamp": "1234567890123"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "d41d8cd98f00b204e9800998ecf8427e",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
+            "awsRegion": "us-east-1"
+        },
+        {
+            "messageId": "2",
+            "receiptHandle": "def456",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"3C:61:05:0D:1C:08\",\"client_id\":\"device2\",\"temp\":{\"number\":2,\"value\":[-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF5\",\"FFFFFFFFFFFFFFF6\"]},\"modbus\":{\"number\":2,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\"],\"slave\":[1,1],\"funct\":[4,4],\"addr\":[0,2],\"bytes\":[4,4]},\"ip\":\"192.168.68.104\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
+            "attrApproximateReceiveCount": "1",
+            "SentTimestamp": "1234567890123",
+            "SenderId": "123456789012",
+            "Apibutes": {
+                "proximateFirstReceiveTimestamp": "1234567890123"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "d41d8cd98f00b204e9800998ecf8427e",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
+            "awsRegion": "us-east-1"
+        },
+        {
+            "messageId": "3",
+            "receiptHandle": "ghi789",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"3C:61:05:0D:1C:08\",\"client_id\":\"device2\",\"temp\":{\"number\":2,\"value\":[-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF5\",\"FFFFFFFFFFFFFFF6\"]},\"modbus\":{\"number\":2,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\"],\"slave\":[1,1],\"funct\":[4,4],\"addr\":[0,2],\"bytes\":[4,4]},\"ip\":\"192.168.68.104\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:18:32\"}",
+            "attrApproximateReceiveCount": "1",
+            "SentTimestamp": "1234567890123",
+            "SenderId": "123456789012",
+            "Apibutes": {
+                "proximateFirstReceiveTimestamp": "1234567890123"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "d41d8cd98f00b204e9800998ecf8427e",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
+            "awsRegion": "us-east-1"
+        },
+        {
+            "messageId": "4",
+            "receiptHandle": "jkl012",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"78:21:84:9C:A9:AC\",\"client_id\":\"device1\",\"temp\":{\"number\":4,\"value\":[-127,-127,-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF1\",\"FFFFFFFFFFFFFFF2\",\"FFFFFFFFFFFFFFF3\",\"FFFFFFFFFFFFFFF4\"]},\"modbus\":{\"number\":5,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\",\"FFFF\",\"FFFF\",\"FFFF\"],\"slave\":[1,1,1,1,254],\"funct\":[4,4,4,4,4],\"addr\":[0,2,4,5,3],\"bytes\":[4,4,2,2,2]},\"ip\":\"192.168.68.103\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:19:32\"}",
+            "attrApproximateReceiveCount": "1",
+            "SentTimestamp": "1234567890123",
+            "SenderId": "123456789012",
+            "Apibutes": {
+                "proximateFirstReceiveTimestamp": "1234567890123"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "d41d8cd98f00b204e9800998ecf8427e",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
+            "awsRegion": "us-east-1"
+        }
+    ]
+}
