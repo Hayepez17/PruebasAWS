@@ -5,9 +5,25 @@ use sqlx::FromRow;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, FromRow)]
+pub struct SensorDeviceInsert {
+    pub device_location_id: i32,
+    pub model_mac: String,
+    pub sensor_name: String,
+    pub location_name: String,
+    pub client_name: String,
+    pub variable_name: String,
+    pub unit: String,
+    pub state: String,
+    pub ip: String,
+    pub value: f64,
+    pub timestamp: NaiveDateTime,
+}
+
+#[derive(Debug, FromRow)]
 pub struct SensorDevicesSettings {
-    pub mac_address: String,
-    pub model: String,
+    pub device_location_id: i32,
+    pub model_mac: String,
+    pub sensor_id: String,
     pub location_name: String,
     pub client_name: String,
     pub variable_name: String,
@@ -19,8 +35,6 @@ pub struct SensorDevicesSettings {
     pub critical: f64,
     pub offset: f64,
     pub calibration_factor: f64,
-    pub status: bool,
-    pub date_created: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -56,8 +70,8 @@ pub struct ModbusRemoteFields {
     pub value: Vec<String>,
     pub slave: Vec<u8>,
     pub funct: Vec<u8>,
-    pub bytes: Vec<u8>,
     pub addr: Vec<u16>,
+    pub bytes: Vec<u8>,
 }
 
 impl SensorDeviceRecive {
@@ -73,26 +87,26 @@ impl SensorDeviceRecive {
 }
 
 impl SensorDeviceData {
-    pub fn generate_sensor_map(sensor_data: SensorDeviceData) -> HashMap<String, Vec<SensorDeviceRecive>>{
+    pub fn generate_sensor_map(sensor_data: SensorDeviceData) -> HashMap<String, SensorDeviceRecive>{
 
-        let mut sensor_map: HashMap<String, Vec<SensorDeviceRecive>> = HashMap::new();
+        let mut sensor_map: HashMap<String, SensorDeviceRecive> = HashMap::new();
 
     // Procesar el campo 'temp'
     if let Some(temp_fields) = sensor_data.temp {
-        for sn in temp_fields.sn {
+        for (i,sn) in temp_fields.sn.iter().enumerate() {
             let sensor_id = format!("ds18@{}", sn);
             let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
-            let value = temp_fields.value.get(0).map_or_else(|| "N/A".to_string(), |v| v.to_string());
+            let value = temp_fields.value.get(i).map_or_else(|| "N/A".to_string(), |v| v.to_string());
 
             let entry = SensorDeviceRecive {
-                sensor_id: sensor_id.clone(),
-                model_mac: model_mac.clone(),
-                value,
-                ip: sensor_data.ip.clone(),
-                time_stamp: sensor_data.time_stamp.clone(),
+            sensor_id: sensor_id.clone(),
+            model_mac: model_mac.clone(),
+            value,
+            ip: sensor_data.ip.clone(),
+            time_stamp: sensor_data.time_stamp.clone(),
             };
 
-            sensor_map.entry(sensor_id).or_insert_with(Vec::new).push(entry);
+            sensor_map.insert(sensor_id, entry);
         }
     }
 
@@ -100,7 +114,7 @@ impl SensorDeviceData {
     if let Some(modbus_fields) = sensor_data.modbus {
         for (i, value) in modbus_fields.value.iter().enumerate() {
             let sensor_id = format!(
-                "{}@{:02X}{:02X}{:04X}{:02X}",
+                "modbus@{}@{:02X}{:02X}{:04X}{:02X}",
                 sensor_data.mac,
                 modbus_fields.slave[i],
                 modbus_fields.funct[i],
@@ -118,12 +132,12 @@ impl SensorDeviceData {
                 sensor_data.time_stamp.clone(),
             );
 
-            sensor_map.entry(sensor_id).or_insert_with(Vec::new).push(entry);
+            sensor_map.insert(sensor_id, entry);
         }
 
         // Procesar el campo 'batery'
 
-        let sensor_id = format!("{}@batery", sensor_data.mac);
+        let sensor_id = format!("batery@{}", sensor_data.mac);
         let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
         let value = sensor_data.batery.to_string();
         let entry = SensorDeviceRecive::new(
@@ -133,7 +147,7 @@ impl SensorDeviceData {
             sensor_data.ip.clone(),
             sensor_data.time_stamp.clone(),
         );
-        sensor_map.entry(sensor_id).or_insert_with(Vec::new).push(entry);
+        sensor_map.insert(sensor_id, entry);
     }
 
     sensor_map

@@ -3,7 +3,7 @@
         {
             "messageId": "1",
             "receiptHandle": "abc123",
-            "body": "{\"model\":\"M5stack\",\"mac\":\"78:21:84:9C:A9:AC\",\"client_id\":\"device1\",\"temp\":{\"number\":4,\"value\":[-127,-127,-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF1\",\"FFFFFFFFFFFFFFF2\",\"FFFFFFFFFFFFFFF3\",\"FFFFFFFFFFFFFFF4\"]},\"modbus\":{\"number\":5,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\",\"FFFF\",\"FFFF\",\"FFFF\"],\"slave\":[1,1,1,1,254],\"funct\":[4,4,4,4,4],\"addr\":[0,2,4,5,3],\"bytes\":[4,4,2,2,2]},\"ip\":\"192.168.68.103\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"78:21:84:9C:A9:AC\",\"client_id\":\"device1\",\"temp\":{\"number\":4,\"value\":[20,21.3,5.7,-127],\"sn\":[\"FFFFFFFFFFFFFFF1\",\"FFFFFFFFFFFFFFF2\",\"FFFFFFFFFFFFFFF3\",\"FFFFFFFFFFFFFFF4\"]},\"modbus\":{\"number\":5,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\",\"FFFF\",\"FFFF\",\"FFFF\"],\"slave\":[1,1,1,1,254],\"funct\":[4,4,4,4,4],\"addr\":[0,2,4,5,3],\"bytes\":[4,4,2,2,2]},\"ip\":\"192.168.68.103\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
             "attrApproximateReceiveCount": "1",
             "SentTimestamp": "1234567890123",
             "SenderId": "123456789012",
@@ -19,7 +19,7 @@
         {
             "messageId": "2",
             "receiptHandle": "def456",
-            "body": "{\"model\":\"M5stack\",\"mac\":\"3C:61:05:0D:1C:08\",\"client_id\":\"device2\",\"temp\":{\"number\":2,\"value\":[-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF5\",\"FFFFFFFFFFFFFFF6\"]},\"modbus\":{\"number\":2,\"value\":[\"FFFFFFFF\",\"FFFFFFFF\"],\"slave\":[1,1],\"funct\":[4,4],\"addr\":[0,2],\"bytes\":[4,4]},\"ip\":\"192.168.68.104\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
+            "body": "{\"model\":\"M5stack\",\"mac\":\"3C:61:05:0D:1C:08\",\"client_id\":\"device2\",\"temp\":{\"number\":2,\"value\":[-127,-127],\"sn\":[\"FFFFFFFFFFFFFFF5\",\"FFFFFFFFFFFFFFF6\"]},\"modbus\":{\"number\":2,\"value\":[\"41B26666\",\"4282CCCD\"],\"slave\":[1,1],\"funct\":[4,4],\"addr\":[0,2],\"bytes\":[4,4]},\"ip\":\"192.168.68.104\",\"batery\":75,\"time_stamp\":\"2025-04-24T16:17:32\"}",
             "attrApproximateReceiveCount": "1",
             "SentTimestamp": "1234567890123",
             "SenderId": "123456789012",
