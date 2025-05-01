@@ -1,25 +1,16 @@
-use std::collections::HashMap;
-
 use chrono::NaiveDateTime;
 use sqlx::FromRow;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use tracing_subscriber;
 
-#[derive(Debug, FromRow)]
-pub struct SensorDeviceInsert {
-    pub device_location_id: i32,
-    pub model_mac: String,
-    pub sensor_name: String,
-    pub location_name: String,
-    pub client_name: String,
-    pub variable_name: String,
-    pub unit: String,
-    pub state: String,
-    pub ip: String,
-    pub value: f64,
-    pub timestamp: NaiveDateTime,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SensorDeviceAlarm {
+    pub sensor_device_setting: SensorDevicesSettings,
+    pub sensor_device_insert: SensorDeviceInsert,
 }
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct SensorDevicesSettings {
     pub device_location_id: i32,
     pub model_mac: String,
@@ -35,6 +26,21 @@ pub struct SensorDevicesSettings {
     pub critical: f64,
     pub offset: f64,
     pub calibration_factor: f64,
+}
+
+#[derive(Debug, FromRow, Serialize, Deserialize)]
+pub struct SensorDeviceInsert {
+    pub device_location_id: i32,
+    pub model_mac: String,
+    pub sensor_name: String,
+    pub location_name: String,
+    pub client_name: String,
+    pub variable_name: String,
+    pub unit: String,
+    pub state: String,
+    pub ip: String,
+    pub value: f64,
+    pub timestamp: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -152,4 +158,19 @@ impl SensorDeviceData {
 
     sensor_map
     }
+}
+
+pub fn init_tracing() {
+    tracing_subscriber::fmt().json()
+        .with_max_level(tracing::Level::INFO)
+        // This needs to be set to remove duplicated information in the log.
+        .with_current_span(false)
+        // This needs to be set to false, otherwise ANSI color codes will
+        // show up in a confusing manner in CloudWatch logs.
+        .with_ansi(false)
+        // Disabling time is handy because CloudWatch will add the ingestion time.
+        .without_time()
+        // Remove the name of the function from every log entry.
+        .with_target(false)
+        .init();
 }
