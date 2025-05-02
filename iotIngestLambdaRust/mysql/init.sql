@@ -29,7 +29,7 @@ CREATE TABLE `sensors` (
   `description` varchar(250) COLLATE utf8mb4_general_ci NOT NULL,
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- /*!40101 SET character_set_sensor = @saved_cs_sensor */;
 
 --
@@ -39,14 +39,18 @@ CREATE TABLE `sensors` (
 LOCK TABLES `sensors` WRITE;
 -- /*!40000 ALTER TABLE `sensors` DISABLE KEYS */;
 INSERT INTO `sensors` VALUES 
-(1,'ds18b20','FFFFFFF1','','2024-10-13 14:24:59'),
-(2,'ds18b20','FFFFFFF2','','2024-10-13 14:24:59'),
-(3,'ds18b20','FFFFFFF3','','2024-10-13 14:24:59'),
-(4,'ds18b20','FFFFFFF4','','2024-10-13 14:24:59'),
-(5,'ds18b20','FFFFFFF5','','2024-10-13 14:24:59'),
-(6,'ds18b20','FFFFFFF6','','2024-10-13 14:24:59'),
-(7,'slave','0103000A','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
-(8,'slave','010301F4','DHT22 relative humidity sensor','2024-10-13 14:24:59');
+(1,'ds18','FFFFFFFFFFFFFFF1','','2024-10-13 14:24:59'),
+(2,'ds18','FFFFFFFFFFFFFFF2','','2024-10-13 14:24:59'),
+(3,'ds18','FFFFFFFFFFFFFFF3','','2024-10-13 14:24:59'),
+(4,'ds18','FFFFFFFFFFFFFFF4','','2024-10-13 14:24:59'),
+(5,'ds18','FFFFFFFFFFFFFFF5','','2024-10-13 14:24:59'),
+(6,'ds18','FFFFFFFFFFFFFFF6','','2024-10-13 14:24:59'),
+(7,'modbus@78:21:84:9C:A9:AC','0104000002','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(8,'modbus@78:21:84:9C:A9:AC','0104000202','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(9,'batery','78:21:84:9C:A9:AC','Batery of M5Stack device','2024-10-13 14:24:59'),
+(10,'modbus@3C:61:05:0D:1C:08','0104000002','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(11,'modbus@3C:61:05:0D:1C:08','0104000202','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(12,'batery','78:21:84:9C:A9:AC','Batery of M5Stack device','2024-10-13 14:24:59');
 -- /*!40000 ALTER TABLE `sensors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -99,7 +103,7 @@ CREATE TABLE `devices` (
 
 LOCK TABLES `devices` WRITE;
 -- /*!40000 ALTER TABLE `devices` DISABLE KEYS */;
-INSERT INTO `devices` VALUES (1,3,'78:21:84:9C:A9:AC','ESP32',1,'2024-10-13 15:00:05'),(2,3,'3C:61:05:0D:1C:08','ESP32',1,'2024-10-13 15:00:05');
+INSERT INTO `devices` VALUES (1,3,'78:21:84:9C:A9:AC','M5stack',1,'2024-10-13 15:00:05'),(2,3,'3C:61:05:0D:1C:08','M5stack',1,'2024-10-13 15:00:05');
 -- /*!40000 ALTER TABLE `devices` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -282,26 +286,26 @@ CREATE TABLE `device_locations` (
   CONSTRAINT `dl_ibfk_3` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
   CONSTRAINT `dl_ibfk_4` FOREIGN KEY (`variable_id`) REFERENCES `variables` (`id`),
   CONSTRAINT `dl_ibfk_5` FOREIGN KEY (`sensor_id`) REFERENCES `sensors` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `device_locations`
 --
 
-LOCK TABLES `device_locations` WRITE;
--- /*!40000 ALTER TABLE `device_locations` DISABLE KEYS */;
-INSERT INTO `device_locations` VALUES 
-(1,1,3,5,1,1,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(2,1,3,5,2,7,15,0,100,80,90,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(3,1,3,1,1,2,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(4,1,3,2,1,3,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(5,1,3,3,1,4,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(6,1,3,4,1,5,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(7,2,3,6,1,6,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
-(8,2,3,6,2,8,15,0,100,80,90,0.00000000,1.00000000,1,'2024-10-13 15:25:35');
--- /*!40000 ALTER TABLE `device_locations` ENABLE KEYS */;
-UNLOCK TABLES;
+-- LOCK TABLES `device_locations` WRITE;
+-- -- /*!40000 ALTER TABLE `device_locations` DISABLE KEYS */;
+-- INSERT INTO `device_locations` VALUES 
+-- (1,1,3,5,1,1,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (2,1,3,5,2,7,15,0,100,80,90,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (3,1,3,1,1,2,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (4,1,3,2,1,3,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (5,1,3,3,1,4,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (6,1,3,4,1,5,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (7,2,3,6,1,6,15,-30,40,28,30,0.00000000,1.00000000,1,'2024-10-13 15:25:35'),
+-- (8,2,3,6,2,8,15,0,100,80,90,0.00000000,1.00000000,1,'2024-10-13 15:25:35');
+-- -- /*!40000 ALTER TABLE `device_locations` ENABLE KEYS */;
+-- UNLOCK TABLES;
 
 --
 -- Dumping routines for database 'db-teg-test1'
