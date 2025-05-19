@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
 --
--- Host: localhost    Database: db-teg-test1
+-- Host: localhost    Database: db_teg_test1
 -- ------------------------------------------------------
 -- Server version	8.0.39
 
@@ -25,11 +25,11 @@ DROP TABLE IF EXISTS `sensors`;
 CREATE TABLE `sensors` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `serial` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `serial` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `description` varchar(250) COLLATE utf8mb4_general_ci NOT NULL,
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- /*!40101 SET character_set_sensor = @saved_cs_sensor */;
 
 --
@@ -39,14 +39,18 @@ CREATE TABLE `sensors` (
 LOCK TABLES `sensors` WRITE;
 -- /*!40000 ALTER TABLE `sensors` DISABLE KEYS */;
 INSERT INTO `sensors` VALUES 
-(1,'ds18b20','FFFFFFF1','','2024-10-13 14:24:59'),
-(2,'ds18b20','FFFFFFF2','','2024-10-13 14:24:59'),
-(3,'ds18b20','FFFFFFF3','','2024-10-13 14:24:59'),
-(4,'ds18b20','FFFFFFF4','','2024-10-13 14:24:59'),
-(5,'ds18b20','FFFFFFF5','','2024-10-13 14:24:59'),
-(6,'ds18b20','FFFFFFF6','','2024-10-13 14:24:59'),
-(7,'slave','0103000A','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
-(8,'slave','010301F4','DHT22 relative humidity sensor','2024-10-13 14:24:59');
+(1,'ds18','FFFFFFF1','','2024-10-13 14:24:59'),
+(2,'ds18','FFFFFFF2','','2024-10-13 14:24:59'),
+(3,'ds18','FFFFFFF3','','2024-10-13 14:24:59'),
+(4,'ds18','FFFFFFF4','','2024-10-13 14:24:59'),
+(5,'ds18','FFFFFFF5','','2024-10-13 14:24:59'),
+(6,'ds18','FFFFFFF6','','2024-10-13 14:24:59'),
+(7,'modbus','78:21:84:9C:A9:AC@0104000002','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(8,'modbus','78:21:84:9C:A9:AC@0104000202','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(9,'batery','78:21:84:9C:A9:AC','Batery of M5Stack device','2024-10-13 14:24:59'),
+(10,'modbus','3C:61:05:0D:1C:08@0104000002','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(11,'modbus','3C:61:05:0D:1C:08@0104000202','DHT22 relative humidity sensor','2024-10-13 14:24:59'),
+(12,'batery','3C:61:05:0D:1C:08','Batery of M5Stack device','2024-10-13 14:24:59')
 -- /*!40000 ALTER TABLE `sensors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -99,7 +103,9 @@ CREATE TABLE `devices` (
 
 LOCK TABLES `devices` WRITE;
 -- /*!40000 ALTER TABLE `devices` DISABLE KEYS */;
-INSERT INTO `devices` VALUES (1,3,'78:21:84:9C:A9:AC','ESP32',1,'2024-10-13 15:00:05'),(2,3,'3C:61:05:0D:1C:08','ESP32',1,'2024-10-13 15:00:05');
+INSERT INTO `devices` VALUES 
+(1,3,'78:21:84:9C:A9:AC','ESP32',1,'2024-10-13 15:00:05'),
+(2,3,'3C:61:05:0D:1C:08','ESP32',1,'2024-10-13 15:00:05');
 -- /*!40000 ALTER TABLE `devices` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -129,7 +135,13 @@ CREATE TABLE `locations` (
 
 LOCK TABLES `locations` WRITE;
 -- /*!40000 ALTER TABLE `locations` DISABLE KEYS */;
-INSERT INTO `locations` VALUES (1,3,'RACK1','',1,'2024-10-13 14:55:43'),(2,3,'RACK2','',1,'2024-10-13 14:55:43'),(3,3,'PASILLO FRIO 1','',1,'2024-10-13 14:55:43'),(4,3,'PASILLO FRIO 2','',1,'2024-10-13 14:55:43'),(5,3,'CUARTO SERVIDOR','',1,'2024-10-13 14:55:43'),(6,3,'CUARTO DE DATOS','',1,'2024-10-13 14:55:43');
+INSERT INTO `locations` VALUES 
+(1,3,'RACK1','',1,'2024-10-13 14:55:43'),
+(2,3,'RACK2','',1,'2024-10-13 14:55:43'),
+(3,3,'PASILLO FRIO 1','',1,'2024-10-13 14:55:43'),
+(4,3,'PASILLO FRIO 2','',1,'2024-10-13 14:55:43'),
+(5,3,'CUARTO SERVIDOR','',1,'2024-10-13 14:55:43'),
+(6,3,'CUARTO DE DATOS','',1,'2024-10-13 14:55:43');
 -- /*!40000 ALTER TABLE `locations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -216,7 +228,13 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 -- /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,1,'Hector Alejandro Yepez','hayepez17@gmail.com','+584124568563',2,1,'2024-10-13 14:41:34'),(2,1,'Hector Ramon Yepez','soportichy@gmail.com','+584123137928',0,1,'2024-10-13 14:41:34'),(3,1,'Victor Jose Yepez','','',0,1,'2024-10-13 14:41:34'),(4,2,'Rafael Rivero','','',0,1,'2024-10-13 14:41:34'),(5,2,'Alejandro Herrera','','',0,1,'2024-10-13 14:41:34'),(6,3,'Jackeline Morffe','jmorffe@gmail.com','+584143986352',0,1,'2024-10-13 14:41:34');
+INSERT INTO `users` VALUES 
+(1,1,'Hector Alejandro Yepez','hayepez17@gmail.com','+584124568563',2,1,'2024-10-13 14:41:34'),
+(2,1,'Hector Ramon Yepez','soportichy@gmail.com','+584123137928',0,1,'2024-10-13 14:41:34'),
+(3,1,'Victor Jose Yepez','','',0,1,'2024-10-13 14:41:34'),
+(4,2,'Rafael Rivero','','',0,1,'2024-10-13 14:41:34'),
+(5,2,'Alejandro Herrera','','',0,1,'2024-10-13 14:41:34'),
+(6,3,'Jackeline Morffe','jmorffe@gmail.com','+584143986352',0,1,'2024-10-13 14:41:34');
 -- /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -243,7 +261,10 @@ CREATE TABLE `variables` (
 
 LOCK TABLES `variables` WRITE;
 -- /*!40000 ALTER TABLE `variables` DISABLE KEYS */;
-INSERT INTO `variables` VALUES (1,'Temperature','°C',1,'2024-10-13 15:01:43'),(2,'R.Humidity','%RH',1,'2024-10-13 15:03:57'),(3,'CO2','ppm',1,'2024-10-13 15:05:41');
+INSERT INTO `variables` VALUES 
+(1,'Temperature','°C',1,'2024-10-13 15:01:43'),
+(2,'R.Humidity','%RH',1,'2024-10-13 15:03:57'),
+(3,'CO2','ppm',1,'2024-10-13 15:05:41');
 -- /*!40000 ALTER TABLE `variables` ENABLE KEYS */;
 UNLOCK TABLES;
 

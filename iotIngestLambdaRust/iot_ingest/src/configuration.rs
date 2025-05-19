@@ -13,7 +13,7 @@ pub struct DatabaseSettings {
     pub port: u16,
     pub user: String,
     pub password: String,
-    pub database_name: String
+    pub database_name: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -38,10 +38,25 @@ pub fn get_configuration() -> Result<Settings, std::env::VarError> {
     // Ok(Settings {database})
 }
 
+pub fn get_bucket_key(
+    datetime: chrono::DateTime<chrono::Utc>,
+) -> String {
+    let year = datetime.format("%Y").to_string();
+    let month = datetime.format("%m").to_string();
+    let day = datetime.format("%d").to_string();
+    format!(
+        "data-lake-metrics-teg-hy/year={}/month={}/day={}/data-lake-metrics-{}.json",
+        year,
+        month,
+        day,
+        datetime.format("%Y-%m-%dT%H:%M:%S").to_string()
+    )
+}
+
 impl DatabaseSettings {
     pub fn connection_string(&self) -> String {
         format!(
-            "mysql://{}:{}@{}:{}/{}",
+            "mysql://{}:{}@{}:{}/{}?charset=utf8mb4&collation=utf8mb4_unicode_ci",
             self.user, self.password, self.endpoint, self.port, self.database_name
         )
     }
@@ -58,9 +73,4 @@ impl AwsSettings {
     pub fn bucket_name(&self) -> String {
         self.bucket_name.clone()
     }
-
-    pub fn get_bucket_key(&self, device_location_id: &str, year: &str, month: &str, day: &str) -> String {
-        format!("{}/device_location_id={}/year={}/month={}/day={}/device_location_metrics.json", self.bucket_name,device_location_id, year, month, day)
-    }
-    
 }

@@ -13,17 +13,23 @@ async fn main() -> Result<(), Error> {
     // Inicializa el logger
     init_tracing();
 
-    let config_aws = aws_config::load_from_env().await;
+    // let config_aws = aws_config::load_from_env().await;
 
-    print!("Config AWS: {:?}", config_aws);
+    //print!("Config AWS: {:?}", config_aws);
 
     let config = configuration::get_configuration().expect("Failed to read configuration");
 
-    let _db_pool = database::db_handler::establish_connection(&config.database).await?;
+    //let _db_pool = database::db_handler::establish_connection(&config.database).await?;
 
+    // run(service_fn(
+    //     move |event: LambdaEvent<SqsEventObj<SensorDeviceData>>| {
+    //         handle_event(event, _db_pool.clone())
+    //     },
+    // ))
+    // .await
     run(service_fn(
         move |event: LambdaEvent<SqsEventObj<SensorDeviceData>>| {
-            handle_event(event, _db_pool.clone())
+            handle_event(event)
         },
     ))
     .await

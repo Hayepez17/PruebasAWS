@@ -1,7 +1,7 @@
+use crate::configuration::DatabaseSettings;
+use common_lib::{SensorDeviceInsert, SensorDevicesSettings};
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
-use common_lib::{SensorDevicesSettings, SensorDeviceInsert};
-use crate::configuration::DatabaseSettings;
 
 pub async fn establish_connection(config: &DatabaseSettings) -> Result<MySqlPool, sqlx::Error> {
     let pool = MySqlPoolOptions::new()
@@ -43,6 +43,11 @@ pub async fn fetch_sensor_devices(
 
     // Ejecutar la consulta y devolver los resultados
     let sensor_devices = select_query.fetch_all(pool).await?;
+
+    // for (i, sensor_device) in sensor_devices.iter().enumerate() {
+    //         println!("\nSensor device row #{}: {:?}", i + 1, sensor_device);
+    //     }
+
     Ok(sensor_devices)
 }
 

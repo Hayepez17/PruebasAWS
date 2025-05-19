@@ -1,8 +1,9 @@
 #![allow(unused)]
 
+use crate::configuration as Config;
 use crate::database::s3_handler::put_metrics_to_s3;
 use crate::services::sensor_service;
-use crate::{configuration::get_configuration, database::db_handler};
+use crate::{database::db_handler};
 
 use aws_lambda_events::sqs::SqsEventObj;
 use aws_sdk_s3::config;
@@ -15,9 +16,12 @@ use std::collections::HashSet;
 use serde_json::to_string;
 // use chrono::Utc;
 
+// pub async fn handle_event(
+//     event: LambdaEvent<SqsEventObj<SensorDeviceData>>,
+//     pool: MySqlPool,
+// ) -> Result<(), Error> {
 pub async fn handle_event(
     event: LambdaEvent<SqsEventObj<SensorDeviceData>>,
-    pool: MySqlPool,
 ) -> Result<(), Error> {
     // Procesa el evento SQS
     //println!("Received event: {:?}", event);
@@ -43,45 +47,40 @@ pub async fn handle_event(
     let unique_macs: Vec<String> = mac_addresses.into_iter().collect();
 
     // Llama a la función del módulo `database`
-    let sensor_devices = db_handler::fetch_sensor_devices(&pool, unique_macs).await?;
+   // let sensor_devices = db_handler::fetch_sensor_devices(&pool, unique_macs).await?;
 
-    // Llama a la función del módulo `db_handler` para procesar las métricas
-    metrics_insert = sensor_service::process_metrics(&sensor_maps, &sensor_devices);
+    // Llama a la función del módulo `services` para procesar las métricas
+    //metrics_insert = sensor_service::process_metrics(&sensor_maps, &sensor_devices);
 
     for (i, metric_insert) in metrics_insert.iter().enumerate() {
         println!("\nMetric insert row #{}: {:?}", i + 1, metric_insert);
     }
 
     // Llama a la función del módulo `database` para insertar las métricas
-    db_handler::insert_metrics(&pool, &metrics_insert).await?;
+   // db_handler::insert_metrics(&pool, &metrics_insert).await?;
 
     // let s3_client = Client::new(&aws_config::load_from_env().await);
-    
-    
-    if !metrics_insert.is_empty() {
-        let mut json_objects = Vec::new();
-        
-        for metric in metrics_insert.iter() {
-            let json_data = to_string(&metric)?;
-            json_objects.push(json_data);
-        }
-        
-        let concatenated_json = format!("[{}]", json_objects.join(","));
-        let config = get_configuration().expect("Failed to read configuration");
-        let bucket_name = config.aws.bucket_name.clone();
-        let s3_key = config
-            .aws
-            .get_bucket_key(
-                &metrics_insert[0].device_location_id.to_string(),
-                &metrics_insert[0].timestamp.format("%Y").to_string(),
-                &metrics_insert[0].timestamp.format("%m").to_string(),
-                &metrics_insert[0].timestamp.format("%d").to_string(),
-            )
-            .clone();
 
-        put_metrics_to_s3(&bucket_name, &s3_key, &concatenated_json.into_bytes())
-            .await?;
-    }
+  //  if !metrics_insert.is_empty() {
+        // let mut json_lines = String::new();
+        let json_lines = "Hola Mundo".to_string(); // Initialize with a greeting
+
+        // for metric in metrics_insert.iter() {
+        //     let json_data = to_string(&metric)?;
+        //     json_lines.push_str(&json_data);
+        //     json_lines.push('\n');
+        // }
+
+        let config = Config::get_configuration().expect("Failed to read configuration");
+        let bucket_name = config.aws.bucket_name.clone();
+
+        // Get the current UTC date
+        let now = chrono::Utc::now();
+        let s3_key = Config::get_bucket_key(now).clone();
+
+        // put_metrics_to_s3(&bucket_name, &s3_key, &json_lines.into_bytes()).await?;
+        put_metrics_to_s3(&bucket_name, &s3_key, &json_lines.into_bytes()).await?;
+   // }
 
     //     s3_client
     //         .put_object()
@@ -90,7 +89,6 @@ pub async fn handle_event(
     //         .body(concatenated_json.into_bytes().into())
     //         .send()
     //         .await?;
-    // }
 
     Ok(())
 }
