@@ -64,6 +64,9 @@ export class CdkIngestIotTegStack extends cdk.Stack {
       }),
       vpc,
       securityGroup,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC, // Cambia a PRIVATE si es necesario
+      },
     });
 
     // Crear una IP Elástica

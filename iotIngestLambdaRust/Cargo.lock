@@ -1735,6 +1735,7 @@ dependencies = [
  "aws_lambda_events",
  "chrono",
  "common_lib",
+ "futures",
  "hex",
  "lambda_runtime",
  "serde",

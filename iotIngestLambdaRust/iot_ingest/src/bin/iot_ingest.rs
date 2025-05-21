@@ -19,18 +19,18 @@ async fn main() -> Result<(), Error> {
 
     let config = configuration::get_configuration().expect("Failed to read configuration");
 
-    //let _db_pool = database::db_handler::establish_connection(&config.database).await?;
+    let _db_pool = database::db_handler::establish_connection(&config.database).await?;
 
-    // run(service_fn(
-    //     move |event: LambdaEvent<SqsEventObj<SensorDeviceData>>| {
-    //         handle_event(event, _db_pool.clone())
-    //     },
-    // ))
-    // .await
     run(service_fn(
         move |event: LambdaEvent<SqsEventObj<SensorDeviceData>>| {
-            handle_event(event)
+            handle_event(event, _db_pool.clone())
         },
     ))
     .await
+    // run(service_fn(
+    //     move |event: LambdaEvent<SqsEventObj<SensorDeviceData>>| {
+    //         handle_event(event)
+    //     },
+    // ))
+    // .await
 }

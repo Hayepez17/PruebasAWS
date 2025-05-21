@@ -2,6 +2,8 @@ use crate::configuration::DatabaseSettings;
 use common_lib::{SensorDeviceInsert, SensorDevicesSettings};
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
+use std::collections::HashSet;
+
 
 pub async fn establish_connection(config: &DatabaseSettings) -> Result<MySqlPool, sqlx::Error> {
     let pool = MySqlPoolOptions::new()
@@ -15,9 +17,11 @@ pub async fn establish_connection(config: &DatabaseSettings) -> Result<MySqlPool
 
 pub async fn fetch_sensor_devices(
     pool: &MySqlPool,
-    mac_addresses: Vec<String>,
+    mac_addresses: HashSet<String>,
 ) -> Result<Vec<SensorDevicesSettings>, sqlx::Error> {
-    let placeholders = mac_addresses
+    let mac_vec: Vec<String> = mac_addresses.into_iter().collect();
+
+    let placeholders = mac_vec
         .iter()
         .map(|_| "?")
         .collect::<Vec<_>>()
@@ -37,7 +41,7 @@ pub async fn fetch_sensor_devices(
     let mut select_query = sqlx::query_as::<_, SensorDevicesSettings>(&query_devices);
 
     // Vincular las direcciones MAC
-    for mac in mac_addresses.iter() {
+    for mac in mac_vec.iter() {
         select_query = select_query.bind(mac);
     }
 
@@ -60,8 +64,14 @@ pub async fn insert_metrics(
         return Ok(());
     }
 
-    let insert_query = r#"
-        INSERT INTO metrics (
+    // Construye la parte VALUES (?, ?, ..., ?) para cada registro
+    let values_clause = (0..metrics.len())
+        .map(|_| "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let insert_query = format!(
+        "INSERT INTO metrics (
             device_location_id,
             client_name,
             location_name,
@@ -73,11 +83,15 @@ pub async fn insert_metrics(
             ip,
             value,
             timestamp
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    "#;
+        ) VALUES {}",
+        values_clause
+    );
 
+    let mut query = sqlx::query(&insert_query);
+
+    // Enlaza todos los parámetros en orden
     for metric in metrics {
-        sqlx::query(insert_query)
+        query = query
             .bind(metric.device_location_id)
             .bind(&metric.client_name)
             .bind(&metric.location_name)
@@ -88,11 +102,11 @@ pub async fn insert_metrics(
             .bind(&metric.state)
             .bind(&metric.ip)
             .bind(metric.value)
-            .bind(metric.timestamp)
-            .execute(pool)
-            .await?;
+            .bind(metric.timestamp);
     }
 
-    println!("Metrics inserted successfully.");
+    query.execute(pool).await?;
+
+    println!("Metrics inserted successfully (batch).");
     Ok(())
 }

@@ -61,6 +61,7 @@ CREATE TABLE `clients` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `telegram_group` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `image` longtext COLLATE utf8mb4_general_ci, -- Campo para imagen en base64
   `status` tinyint NOT NULL DEFAULT '1',
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -73,7 +74,10 @@ CREATE TABLE `clients` (
 
 LOCK TABLES `clients` WRITE;
 -- /*!40000 ALTER TABLE `clients` DISABLE KEYS */;
-INSERT INTO `clients` VALUES (1,'Soportic','',1,'2024-10-13 14:24:59'),(2,'EIE UCV','',1,'2024-10-13 14:24:59'),(3,'Iambox','',1,'2024-10-13 14:24:59');
+INSERT INTO `clients` VALUES 
+(1,'Soportic','',NULL,1,'2024-10-13 14:24:59'),
+(2,'EIE UCV','',NULL,1,'2024-10-13 14:24:59'),
+(3,'Iambox','',NULL,1,'2024-10-13 14:24:59');
 -- /*!40000 ALTER TABLE `clients` ENABLE KEYS */;
 UNLOCK TABLES;
 

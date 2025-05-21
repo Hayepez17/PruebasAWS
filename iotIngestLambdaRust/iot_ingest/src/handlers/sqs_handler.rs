@@ -9,6 +9,7 @@ use aws_lambda_events::sqs::SqsEventObj;
 use aws_sdk_s3::config;
 use common_lib::{SensorDeviceData, SensorDeviceInsert};
 use core::alloc;
+use futures::future::join_all;
 use lambda_runtime::{Error, LambdaEvent};
 use sqlx::MySqlPool;
 use std::collections::HashSet;
@@ -16,71 +17,83 @@ use std::collections::HashSet;
 use serde_json::to_string;
 // use chrono::Utc;
 
-// pub async fn handle_event(
-//     event: LambdaEvent<SqsEventObj<SensorDeviceData>>,
-//     pool: MySqlPool,
-// ) -> Result<(), Error> {
 pub async fn handle_event(
     event: LambdaEvent<SqsEventObj<SensorDeviceData>>,
+    pool: MySqlPool,
 ) -> Result<(), Error> {
-    // Procesa el evento SQS
-    //println!("Received event: {:?}", event);
+    // Procesa cada mensaje en paralelo
+    let tasks = event.payload.records.into_iter().map(|record| {
+        tokio::spawn(async move {
+            let data = record.body;
+            if data.mac.is_empty() {
+                println!("Empty MAC address found in the data: {:?}", data);
+                return None;
+            }
+            let sensor_map = SensorDeviceData::generate_sensor_map(data);
+            Some(sensor_map)
+        })
+    });
 
-    let mut mac_addresses: HashSet<String> = HashSet::new();
-    let mut sensor_maps = Vec::new();
-    let mut metrics_insert: Vec<SensorDeviceInsert> = Vec::new();
-
-    for record in event.payload.records {
-        let data = record.body;
-
-        mac_addresses.insert(data.mac.clone());
-
-        if data.mac.is_empty() {
-            println!("Empty MAC address found in the data: {:?}", data);
-            continue;
-        }
-
-        let sensor_map = SensorDeviceData::generate_sensor_map(data);
-        sensor_maps.push(sensor_map);
-    }
-
-    let unique_macs: Vec<String> = mac_addresses.into_iter().collect();
+    // Espera a que todos los tasks terminen y recoge los resultados
+    let sensor_maps: Vec<_> = join_all(tasks)
+        .await
+        .into_iter()
+        .filter_map(|res| match res {
+            Ok(Some(map)) => Some(map),
+            _ => None,
+        })
+        .collect();
 
     // Llama a la función del módulo `database`
-   // let sensor_devices = db_handler::fetch_sensor_devices(&pool, unique_macs).await?;
+    let mac_addresses: HashSet<String> = sensor_maps
+        .iter()
+        .flat_map(|map| map.values().map(|v| v.mac.clone()))
+        .collect();
 
-    // Llama a la función del módulo `services` para procesar las métricas
-    //metrics_insert = sensor_service::process_metrics(&sensor_maps, &sensor_devices);
+    let sensor_devices = db_handler::fetch_sensor_devices(&pool, mac_addresses).await?;
+    let metrics_insert = sensor_service::process_metrics(&sensor_maps, &sensor_devices);
 
-    for (i, metric_insert) in metrics_insert.iter().enumerate() {
-        println!("\nMetric insert row #{}: {:?}", i + 1, metric_insert);
-    }
+    // for (i, metric_insert) in metrics_insert.iter().enumerate() {
+    //     println!("\nMetric insert row #{}: {:?}", i + 1, metric_insert);
+    // }
 
     // Llama a la función del módulo `database` para insertar las métricas
-   // db_handler::insert_metrics(&pool, &metrics_insert).await?;
+    //db_handler::insert_metrics(&pool, &metrics_insert).await?;
 
     // let s3_client = Client::new(&aws_config::load_from_env().await);
 
-  //  if !metrics_insert.is_empty() {
-        // let mut json_lines = String::new();
-        let json_lines = "Hola Mundo".to_string(); // Initialize with a greeting
+    if !metrics_insert.is_empty() {
+        let mut json_lines = String::new();
 
-        // for metric in metrics_insert.iter() {
-        //     let json_data = to_string(&metric)?;
-        //     json_lines.push_str(&json_data);
-        //     json_lines.push('\n');
-        // }
+        for metric in metrics_insert.iter() {
+            let json_data = to_string(&metric)?;
+            json_lines.push_str(&json_data);
+            json_lines.push('\n');
+        }
 
         let config = Config::get_configuration().expect("Failed to read configuration");
         let bucket_name = config.aws.bucket_name.clone();
-
-        // Get the current UTC date
         let now = chrono::Utc::now();
         let s3_key = Config::get_bucket_key(now).clone();
 
-        // put_metrics_to_s3(&bucket_name, &s3_key, &json_lines.into_bytes()).await?;
-        put_metrics_to_s3(&bucket_name, &s3_key, &json_lines.into_bytes()).await?;
-   // }
+        // Clona los datos necesarios para el proceso concurrente
+        let pool_clone = pool.clone();
+        let metrics_clone = metrics_insert.clone();
+
+        let db_future = async move {
+            db_handler::insert_metrics(&pool_clone, &metrics_clone).await
+        };
+
+        let s3_future = async move {
+            put_metrics_to_s3(&bucket_name, &s3_key, &json_lines.into_bytes()).await
+        };
+
+        // Ejecuta ambos procesos concurrentemente
+        let (db_result, s3_result) = tokio::join!(db_future, s3_future);
+
+        db_result?; // Propaga el error si ocurre
+        s3_result?; // Propaga el error si ocurre
+    }
 
     //     s3_client
     //         .put_object()

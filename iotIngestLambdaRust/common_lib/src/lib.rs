@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing_subscriber;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SensorDeviceAlarm {
-    pub sensor_device_setting: SensorDevicesSettings,
-    pub sensor_device_insert: SensorDeviceInsert,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct SensorDeviceAlarm {
+//     pub sensor_device_setting: SensorDevicesSettings,
+//     pub sensor_device_insert: SensorDeviceInsert,
+// }
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct SensorDevicesSettings {
@@ -28,7 +28,7 @@ pub struct SensorDevicesSettings {
     pub calibration_factor: f64,
 }
 
-#[derive(Debug, FromRow, Serialize, Deserialize)]
+#[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
 pub struct SensorDeviceInsert {
     pub device_location_id: i32,
     pub model_mac: String,
@@ -41,6 +41,7 @@ pub struct SensorDeviceInsert {
     pub ip: String,
     pub value: f64,
     pub timestamp: NaiveDateTime,
+    pub alarm_type: u16,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,8 +55,9 @@ pub struct SensorDeviceData {
     pub modbus: Option<ModbusRemoteFields>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SensorDeviceRecive {
+    pub mac: String,
     pub sensor_id: String, // "ds18@<sn>" || "<mac>@<byte_array>" || "<mac>@batery"
     pub model_mac: String, // "<model>@<mac>"
     pub value: String,
@@ -80,9 +82,18 @@ pub struct ModbusRemoteFields {
     pub bytes: Vec<u8>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum SensorDeviceAlarm {
+    OK(String),
+    DISCONNECT(String),
+    WARNING(String),
+    CRITICAL(String),
+}
+
 impl SensorDeviceRecive {
-    pub fn new(sensor_id: String, model_mac: String, value: String, ip: String, time_stamp: String) -> Self {
+    pub fn new(device_mac: String,sensor_id: String, model_mac: String, value: String, ip: String, time_stamp: String) -> Self {
         SensorDeviceRecive {
+            mac: device_mac,
             sensor_id,
             model_mac,
             value,
@@ -104,13 +115,14 @@ impl SensorDeviceData {
             let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
             let value = temp_fields.value.get(i).map_or_else(|| "N/A".to_string(), |v| v.to_string());
 
-            let entry = SensorDeviceRecive {
-            sensor_id: sensor_id.clone(),
-            model_mac: model_mac.clone(),
-            value,
-            ip: sensor_data.ip.clone(),
-            time_stamp: sensor_data.time_stamp.clone(),
-            };
+             let entry = SensorDeviceRecive::new(
+                sensor_data.mac.clone(),
+                sensor_id.clone(),
+                model_mac.clone(),
+                value.clone(),
+                sensor_data.ip.clone(),
+                sensor_data.time_stamp.clone(),
+            );
 
             sensor_map.insert(sensor_id, entry);
         }
@@ -131,6 +143,7 @@ impl SensorDeviceData {
             let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
 
             let entry = SensorDeviceRecive::new(
+                sensor_data.mac.clone(),
                 sensor_id.clone(),
                 model_mac.clone(),
                 value.clone(),
@@ -147,6 +160,7 @@ impl SensorDeviceData {
         let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
         let value = sensor_data.batery.to_string();
         let entry = SensorDeviceRecive::new(
+            sensor_data.mac.clone(),
             sensor_id.clone(),
             model_mac.clone(),
             value.clone(),
