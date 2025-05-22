@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use sqlx::FromRow;
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use std::collections::HashMap;
 use tracing_subscriber;
 
@@ -9,6 +9,27 @@ use tracing_subscriber;
 //     pub sensor_device_setting: SensorDevicesSettings,
 //     pub sensor_device_insert: SensorDeviceInsert,
 // }
+
+#[derive(Debug, FromRow, Serialize, Deserialize)]
+pub struct LoggerDeviceLocation {
+  pub id: i32,
+  pub device_location_id: i32,
+  pub client_name: String,
+  pub location_name: String,
+  pub alarm_level: String,
+  pub msg: String,
+  pub recognized: i32,
+  pub last_update: NaiveDateTime,
+}
+
+#[derive(serde::Deserialize)]
+pub struct DatabaseSettings {
+    pub endpoint: String,
+    pub port: u16,
+    pub user: String,
+    pub password: String,
+    pub database_name: String,
+}
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct SensorDevicesSettings {
@@ -72,7 +93,7 @@ pub struct TempSensorFields {
     pub sn: Vec<String>,
 }
 
-#[derive(Debug ,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ModbusRemoteFields {
     pub number: u8,
     pub value: Vec<String>,
@@ -91,7 +112,14 @@ pub enum SensorDeviceAlarm {
 }
 
 impl SensorDeviceRecive {
-    pub fn new(device_mac: String,sensor_id: String, model_mac: String, value: String, ip: String, time_stamp: String) -> Self {
+    pub fn new(
+        device_mac: String,
+        sensor_id: String,
+        model_mac: String,
+        value: String,
+        ip: String,
+        time_stamp: String,
+    ) -> Self {
         SensorDeviceRecive {
             mac: device_mac,
             sensor_id,
@@ -103,45 +131,82 @@ impl SensorDeviceRecive {
     }
 }
 
-impl SensorDeviceData {
-    pub fn generate_sensor_map(sensor_data: SensorDeviceData) -> HashMap<String, SensorDeviceRecive>{
-
-        let mut sensor_map: HashMap<String, SensorDeviceRecive> = HashMap::new();
-
-    // Procesar el campo 'temp'
-    if let Some(temp_fields) = sensor_data.temp {
-        for (i,sn) in temp_fields.sn.iter().enumerate() {
-            let sensor_id = format!("ds18@{}", sn);
-            let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
-            let value = temp_fields.value.get(i).map_or_else(|| "N/A".to_string(), |v| v.to_string());
-
-             let entry = SensorDeviceRecive::new(
-                sensor_data.mac.clone(),
-                sensor_id.clone(),
-                model_mac.clone(),
-                value.clone(),
-                sensor_data.ip.clone(),
-                sensor_data.time_stamp.clone(),
-            );
-
-            sensor_map.insert(sensor_id, entry);
-        }
+impl DatabaseSettings {
+    pub fn connection_string(&self) -> String {
+        format!(
+            "mysql://{}:{}@{}:{}/{}?charset=utf8mb4&collation=utf8mb4_unicode_ci",
+            self.user, self.password, self.endpoint, self.port, self.database_name
+        )
     }
 
-    // Procesar el campo 'modbus'
-    if let Some(modbus_fields) = sensor_data.modbus {
-        for (i, value) in modbus_fields.value.iter().enumerate() {
-            let sensor_id = format!(
-                "modbus@{}@{:02X}{:02X}{:04X}{:02X}",
-                sensor_data.mac,
-                modbus_fields.slave[i],
-                modbus_fields.funct[i],
-                modbus_fields.addr[i],
-                modbus_fields.bytes[i]
-            );
+    pub fn connection_string_without_db(&self) -> String {
+        format!(
+            "mysql://{}:{}@{}:{}",
+            self.user, self.password, self.endpoint, self.port
+        )
+    }
+}
 
+impl SensorDeviceData {
+    pub fn generate_sensor_map(
+        sensor_data: SensorDeviceData,
+    ) -> HashMap<String, SensorDeviceRecive> {
+        let mut sensor_map: HashMap<String, SensorDeviceRecive> = HashMap::new();
+
+        // Procesar el campo 'temp'
+        if let Some(temp_fields) = sensor_data.temp {
+            for (i, sn) in temp_fields.sn.iter().enumerate() {
+                let sensor_id = format!("ds18@{}", sn);
+                let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
+                let value = temp_fields
+                    .value
+                    .get(i)
+                    .map_or_else(|| "N/A".to_string(), |v| v.to_string());
+
+                let entry = SensorDeviceRecive::new(
+                    sensor_data.mac.clone(),
+                    sensor_id.clone(),
+                    model_mac.clone(),
+                    value.clone(),
+                    sensor_data.ip.clone(),
+                    sensor_data.time_stamp.clone(),
+                );
+
+                sensor_map.insert(sensor_id, entry);
+            }
+        }
+
+        // Procesar el campo 'modbus'
+        if let Some(modbus_fields) = sensor_data.modbus {
+            for (i, value) in modbus_fields.value.iter().enumerate() {
+                let sensor_id = format!(
+                    "modbus@{}@{:02X}{:02X}{:04X}{:02X}",
+                    sensor_data.mac,
+                    modbus_fields.slave[i],
+                    modbus_fields.funct[i],
+                    modbus_fields.addr[i],
+                    modbus_fields.bytes[i]
+                );
+
+                let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
+
+                let entry = SensorDeviceRecive::new(
+                    sensor_data.mac.clone(),
+                    sensor_id.clone(),
+                    model_mac.clone(),
+                    value.clone(),
+                    sensor_data.ip.clone(),
+                    sensor_data.time_stamp.clone(),
+                );
+
+                sensor_map.insert(sensor_id, entry);
+            }
+
+            // Procesar el campo 'batery'
+
+            let sensor_id = format!("batery@{}", sensor_data.mac);
             let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
-
+            let value = sensor_data.batery.to_string();
             let entry = SensorDeviceRecive::new(
                 sensor_data.mac.clone(),
                 sensor_id.clone(),
@@ -150,32 +215,16 @@ impl SensorDeviceData {
                 sensor_data.ip.clone(),
                 sensor_data.time_stamp.clone(),
             );
-
             sensor_map.insert(sensor_id, entry);
         }
 
-        // Procesar el campo 'batery'
-
-        let sensor_id = format!("batery@{}", sensor_data.mac);
-        let model_mac = format!("{}@{}", sensor_data.model, sensor_data.mac);
-        let value = sensor_data.batery.to_string();
-        let entry = SensorDeviceRecive::new(
-            sensor_data.mac.clone(),
-            sensor_id.clone(),
-            model_mac.clone(),
-            value.clone(),
-            sensor_data.ip.clone(),
-            sensor_data.time_stamp.clone(),
-        );
-        sensor_map.insert(sensor_id, entry);
-    }
-
-    sensor_map
+        sensor_map
     }
 }
 
 pub fn init_tracing() {
-    tracing_subscriber::fmt().json()
+    tracing_subscriber::fmt()
+        .json()
         .with_max_level(tracing::Level::INFO)
         // This needs to be set to remove duplicated information in the log.
         .with_current_span(false)

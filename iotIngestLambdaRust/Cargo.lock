@@ -216,6 +216,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-ses"
+version = "1.73.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7286bdbfae119709e0f8e2304b816e2da40d58c7642d5bf55ecf34f5c1783be3"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-query",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-smithy-xml",
+ "aws-types",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-sso"
 version = "1.65.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1983,9 +2006,14 @@ dependencies = [
 name = "notifications"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-ses",
  "aws_lambda_events",
  "common_lib",
  "lambda_runtime",
+ "serde",
+ "serde_json",
+ "sqlx",
  "tokio",
 ]
 

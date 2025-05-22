@@ -340,3 +340,56 @@ CREATE TABLE `device_locations` (
 -- /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2024-10-13 16:09:39
+
+-- SELECT
+--             *
+--           FROM
+--             (
+--               SELECT
+--                 cl.location_name,
+--                 dv.variable_name,
+--                 COALESCE(dl.date, NULL) AS date,
+--                 COALESCE(dl.value, NULL) AS value,
+--                 CASE
+--                   WHEN dv.variable_name = 'TEMPERATURE' THEN 'C°'
+--                   WHEN dv.variable_name = 'HUMIDITY' THEN '%H'
+--                   ELSE NULL
+--                 END AS unit
+--               FROM
+--                 iamboxco_db_iambox.device d
+--                 INNER JOIN iamboxco_db_iambox.clients c ON d.client_id = c.id
+--                 INNER JOIN iamboxco_db_iambox.clients_location cl ON d.location_id = cl.id
+--                 INNER JOIN iamboxco_db_iambox.device_variables dv ON d.device_variable_id = dv.id
+--                 LEFT JOIN (
+--                   SELECT
+--                     DATE_ADD(dl.date, INTERVAL 4 HOUR) date,
+--                     dl.value,
+--                     dl.location_id,
+--                     dl.device_variable_id
+--                   FROM
+--                     iamboxco_db_iambox.sensors_data_log dl
+--                   WHERE
+--                     dl.status != 0
+--                     AND dl.date BETWEEN FROM_UNIXTIME(${__from:date:seconds})
+--                     AND FROM_UNIXTIME(${__to:date:seconds})
+--                 ) dl ON cl.id = dl.location_id
+--                 AND dv.id = dl.device_variable_id
+--               WHERE
+--                 c.client_name = '$varClient'
+--                 AND cl.location_name IN (${varLocation:doublequote})
+--                 AND dv.variable_name = '$varVariable'
+--               ORDER BY
+--                 dl.date DESC
+--               LIMIT
+--                 25
+--             ) sl
+--           GROUP BY
+--             sl.location_name,
+--             sl.variable_name
+--           ORDER BY
+--             sl.variable_name,
+--             sl.location_name;
+
+-- SELECT * FROM (SELECT * FROM logger WHERE device_location_id IN ({}) ORDER BY last_update DESC LIMIT 50) AS subquery
+-- GROUP BY device_location_id
+-- ORDER BY last_update DESC;

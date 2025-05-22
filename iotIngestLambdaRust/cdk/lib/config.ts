@@ -12,6 +12,8 @@ export type ConfigProps = {
     bucketName: string;
     region: string;
     account: string;
+    telegramBotToken: string;
+    emailFrom: string;
 }
 
 export const getConfig = (): ConfigProps => {
@@ -27,5 +29,9 @@ export const getConfig = (): ConfigProps => {
         dbName: process.env.DB_NAME || 'mydb',
         // S3 bucket name
         bucketName: process.env.AWS_BUCKET_NAME || 'my-s3-bucket',
+        // Telegram bot token
+        telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || 'your-telegram-bot-token',
+        // Email configuration
+        emailFrom: process.env.EMAIL_FROM || 'example@gmail.com'
     }
 }

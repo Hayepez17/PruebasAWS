@@ -1,5 +1,5 @@
-use crate::configuration::DatabaseSettings;
-use common_lib::{SensorDeviceInsert, SensorDevicesSettings};
+// Project: iot_ingest
+use common_lib::{DatabaseSettings, SensorDeviceInsert, SensorDevicesSettings};
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
 use std::collections::HashSet;

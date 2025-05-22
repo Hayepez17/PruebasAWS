@@ -86,7 +86,11 @@ export class CdkIngestIotTegStack extends cdk.Stack {
     // If the bucket already exists in your AWS account, this will reference it instead of creating a new one.
 
     // Create an SQS queue
-    const queue = new sqs.Queue(this, 'InlineDataQueue', {
+    const InlineDataQueue = new sqs.Queue(this, 'InlineDataQueue', {
+      visibilityTimeout: cdk.Duration.seconds(300),
+    });
+
+    const AlarmDataQueue = new sqs.Queue(this, 'AlarmDataQueue', {
       visibilityTimeout: cdk.Duration.seconds(300),
     });
     // // Create an SQS queue with dead-letter queue for batch error handling
@@ -94,7 +98,7 @@ export class CdkIngestIotTegStack extends cdk.Stack {
     //   retentionPeriod: cdk.Duration.days(14),
     // });
 
-    // const queue = new sqs.Queue(this, 'InlineDataQueue', {
+    // const InlineDataQueue = new sqs.Queue(this, 'InlineDataQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300),
     //   deadLetterQueue: {
     //   maxReceiveCount: 5, // Number of times a message can be received before moving to the dead-letter queue
@@ -103,37 +107,64 @@ export class CdkIngestIotTegStack extends cdk.Stack {
     // });
 
     // Create a Lambda function with Rust runtime (no VPC, public internet access)
-    const lambdaFunction = new lambda.Function(this, 'IoTIngestLambda', {
+    const IoTIngestLambda = new lambda.Function(this, 'IoTIngestLambda', {
       runtime: lambda.Runtime.PROVIDED_AL2023,
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "..", "target/lambda/iot_ingest")), // Path to the compiled Rust binary
       handler: 'bootstrap',
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
       environment: {
-      AWS_BUCKET_NAME: bucket.bucketName,
-      QUEUE_URL: queue.queueUrl,
-      DB_HOST_URL: eip.ref, // Usar la IP elástica asociada a la instancia EC2
-      DB_PORT: config.dbPort,
-      DB_USERNAME: config.dbUser,
-      DB_PASSWORD: config.dbPassword,
-      DB_NAME: config.dbName,
+        AWS_BUCKET_NAME: bucket.bucketName,
+        QUEUE_URL: AlarmDataQueue.queueUrl,
+        DB_HOST_URL: eip.ref, // Usar la IP elástica asociada a la instancia EC2
+        DB_PORT: config.dbPort,
+        DB_USERNAME: config.dbUser,
+        DB_PASSWORD: config.dbPassword,
+        DB_NAME: config.dbName,
       },
       // No VPC or securityGroups, so Lambda has public internet access
     });
 
     // Grant the Lambda function write permissions to the S3 bucket
-    bucket.grantPut(lambdaFunction);
+    bucket.grantPut(IoTIngestLambda);
+    // Grant the Lambda function permissions to send messages to the SQS queue
+    AlarmDataQueue.grantSendMessages(IoTIngestLambda);
 
     // Add the SQS queue as an event source for the Lambda function
-    lambdaFunction.addEventSource(
-      new lambdaEventSources.SqsEventSource(queue, {
+    IoTIngestLambda.addEventSource(
+      new lambdaEventSources.SqsEventSource(InlineDataQueue, {
         batchSize: 10, // Adjust the batch size as needed
         maxBatchingWindow: cdk.Duration.seconds(30), // Adjust the max batching window as needed
       })
     );
 
+    // Create a Lambda function for notifications
+    const NotificationsFunction = new lambda.Function(this, 'NotificationsFunction', {
+      runtime: lambda.Runtime.PROVIDED_AL2023,
+      code: lambda.Code.fromAsset(path.join(__dirname, "..", "..", "target/lambda/notifications")), // Path to the compiled Rust binary
+      handler: 'bootstrap',
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(30),
+      environment: {
+        DB_HOST_URL: eip.ref, // Usar la IP elástica asociada a la instancia EC2
+        DB_PORT: config.dbPort,
+        DB_USERNAME: config.dbUser,
+        DB_PASSWORD: config.dbPassword,
+        DB_NAME: config.dbName,
+        TELEGRAM_BOT_TOKEN: config.telegramBotToken,
+        EMAIL_FROM: config.emailFrom,
+      },
+    });
+
+    NotificationsFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+      ],
+      resources: ["*"], // Limita si es posible
+    }));
     // // Grant the Lambda function permissions to send messages to the SQS queue
-    // queue.grantConsumeMessages(lambdaFunction);
+    AlarmDataQueue.grantSendMessages(NotificationsFunction);
 
     // Create an IoT Core rule
     new iot.CfnTopicRule(this, 'IoTCoreRule', {
@@ -142,7 +173,7 @@ export class CdkIngestIotTegStack extends cdk.Stack {
         actions: [
           {
             sqs: {
-              queueUrl: queue.queueUrl,
+              queueUrl: InlineDataQueue.queueUrl,
               roleArn: new iam.Role(this, 'IoTSqsRole', {
                 assumedBy: new iam.ServicePrincipal('iot.amazonaws.com'),
                 inlinePolicies: {
@@ -150,7 +181,7 @@ export class CdkIngestIotTegStack extends cdk.Stack {
                     statements: [
                       new iam.PolicyStatement({
                         actions: ['sqs:SendMessage'],
-                        resources: [queue.queueArn],
+                        resources: [InlineDataQueue.queueArn],
                       }),
                     ],
                   }),

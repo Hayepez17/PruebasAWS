@@ -1,19 +1,11 @@
 // src/configuration.rs
 use std::env;
+use common_lib::DatabaseSettings;
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub aws: AwsSettings,
-}
-
-#[derive(serde::Deserialize)]
-pub struct DatabaseSettings {
-    pub endpoint: String,
-    pub port: u16,
-    pub user: String,
-    pub password: String,
-    pub database_name: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -51,22 +43,6 @@ pub fn get_bucket_key(
         day,
         datetime.format("%Y-%m-%dT%H:%M:%S").to_string()
     )
-}
-
-impl DatabaseSettings {
-    pub fn connection_string(&self) -> String {
-        format!(
-            "mysql://{}:{}@{}:{}/{}?charset=utf8mb4&collation=utf8mb4_unicode_ci",
-            self.user, self.password, self.endpoint, self.port, self.database_name
-        )
-    }
-
-    pub fn connection_string_without_db(&self) -> String {
-        format!(
-            "mysql://{}:{}@{}:{}",
-            self.user, self.password, self.endpoint, self.port
-        )
-    }
 }
 
 impl AwsSettings {
