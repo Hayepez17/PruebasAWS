@@ -40,13 +40,23 @@ pub struct SensorDevicesSettings {
     pub client_name: String,
     pub variable_name: String,
     pub unit: String,
-    pub notify_every: u32,
     pub min: f64,
     pub max: f64,
-    pub warning: f64,
-    pub critical: f64,
     pub offset: f64,
     pub calibration_factor: f64,
+    pub alarms_details: Option<Vec<AlarmsDetails>>,
+}
+
+#[derive(Debug, FromRow, Serialize, Deserialize)]
+pub struct AlarmsDetails {
+    pub alarm_id: i32,
+    pub device_location_id: i32,
+    pub type_: u32,
+    pub severity: u32,
+    pub alarm_role: u32,
+    pub set_point: f64,
+    pub every: f64,
+    pub status: u8,
 }
 
 #[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
@@ -105,10 +115,21 @@ pub struct ModbusRemoteFields {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum SensorDeviceAlarm {
-    OK(String),
-    DISCONNECT(String),
+    ERROR(String),
+    NORMAL(String),
+    MAJOR(String),
+    MINOR(String),
     WARNING(String),
     CRITICAL(String),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum SensorAlarmSeverity {
+    NORMAL(u8),
+    MINOR(u8),
+    MAJOR(u8),
+    WARNING(u8),
+    CRITICAL(u8),
 }
 
 impl SensorDeviceRecive {

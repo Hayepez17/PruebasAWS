@@ -1,7 +1,8 @@
 // Project: iot_ingest
-use common_lib::{DatabaseSettings, SensorDeviceInsert, SensorDevicesSettings};
+use common_lib::{DatabaseSettings, SensorDeviceInsert, SensorDevicesSettings, AlarmsDetails};
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
+use sqlx::Row;
 use std::collections::HashSet;
 
 
@@ -27,30 +28,76 @@ pub async fn fetch_sensor_devices(
         .collect::<Vec<_>>()
         .join(",");
 
-    let query_devices = format!(
-        r#"SELECT dl.id device_location_id, CONCAT_WS('@',d.model,d.mac_address) model_mac, CONCAT_WS('@',s.name,s.serial) sensor_id, l.name location_name, c.name client_name, v.name variable_name, v.unit, dl.notify_every, dl.min, dl.max, dl.warning, dl.critical, dl.offset, dl.calibration_factor FROM device_locations dl 
-        INNER JOIN variables v ON dl.variable_id = v.id 
-        INNER JOIN devices d ON d.id = dl.device_id 
-        INNER JOIN locations l ON dl.location_id = l.id AND d.client_id = l.client_id 
-        INNER JOIN clients c ON dl.client_id = c.id 
-        INNER JOIN sensors s ON dl.sensor_id = s.id 
-    WHERE dl.status != 0 AND d.mac_address IN ({});"#,
+let query_devices = format!(
+        r#"select dl.id device_location_id, CONCAT_WS('@', d.model, d.mac_address) model_mac, CONCAT_WS('@', s.name, s.serial) sensor_id, c.name client_name, l.name location_name, v.name variable_name, v.unit, dl.min, dl.max, dl.offset, dl.calibration_factor, case when COUNT(al.id)> 0 then JSON_ARRAYAGG(JSON_OBJECT('alarm_id', al.id, 'device_location_id', al.device_location_id, 'type', al.type, 'severity', al.severity, 'alarm_role', al.alarm_role, 'set_point', al.set_point, 'every', al.every, 'status', al.status)) else NULL end as alarms_details from device_locations dl 
+        left join alarm_sensors al on al.device_location_id = dl.id 
+        inner join clients c on dl.client_id = c.id 
+        inner join devices d on dl.device_id = d.id 
+        inner join locations l on dl.location_id = l.id 
+        inner join variables v on dl.variable_id = v.id 
+        inner join sensors s on dl.sensor_id = s.id where dl.status != 0 and d.mac_address IN ({}) group by dl.id;"#,
         placeholders
     );
 
-    let mut select_query = sqlx::query_as::<_, SensorDevicesSettings>(&query_devices);
+    // let query_devices = format!(
+    //     r#"SELECT dl.id device_location_id, CONCAT_WS('@',d.model,d.mac_address) model_mac, CONCAT_WS('@',s.name,s.serial) sensor_id, l.name location_name, c.name client_name, v.name variable_name, v.unit, dl.notify_every, dl.min, dl.max, dl.warning, dl.critical, dl.offset, dl.calibration_factor FROM device_locations dl 
+    //     INNER JOIN variables v ON dl.variable_id = v.id 
+    //     INNER JOIN devices d ON d.id = dl.device_id 
+    //     INNER JOIN locations l ON dl.location_id = l.id AND d.client_id = l.client_id 
+    //     INNER JOIN clients c ON dl.client_id = c.id 
+    //     INNER JOIN sensors s ON dl.sensor_id = s.id 
+    // WHERE dl.status != 0 AND d.mac_address IN ({});"#,
+    //     placeholders
+    // );
 
-    // Vincular las direcciones MAC
+    // let mut select_query = sqlx::query_as::<_, SensorDevicesSettings>(&query_devices);
+
+    // // Vincular las direcciones MAC
+    // for mac in mac_vec.iter() {
+    //     select_query = select_query.bind(mac);
+    // }
+
+    // // Ejecutar la consulta y devolver los resultados
+    // let sensor_devices = select_query.fetch_all(pool).await?;
+
+    // // for (i, sensor_device) in sensor_devices.iter().enumerate() {
+    // //         println!("\nSensor device row #{}: {:?}", i + 1, sensor_device);
+    // //     }
+
+    let mut select_query = sqlx::query(&query_devices);
+
+    // Bind MAC addresses
     for mac in mac_vec.iter() {
         select_query = select_query.bind(mac);
     }
 
-    // Ejecutar la consulta y devolver los resultados
-    let sensor_devices = select_query.fetch_all(pool).await?;
+    // Fetch rows and manually map to SensorDevicesSettings
+    let rows = select_query.fetch_all(pool).await?;
+    let mut sensor_devices = Vec::with_capacity(rows.len());
+    for row in rows {
+        // Adjust field extraction as per your struct definition
+        let alarms_details_json: Option<String> = row.try_get("alarms_details").ok();
+        let alarms_details: Option<Vec<AlarmsDetails>> = match alarms_details_json {
+            Some(json) => serde_json::from_str(&json).ok(),
+            None => None,
+        };
 
-    // for (i, sensor_device) in sensor_devices.iter().enumerate() {
-    //         println!("\nSensor device row #{}: {:?}", i + 1, sensor_device);
-    //     }
+        sensor_devices.push(SensorDevicesSettings {
+            device_location_id: row.try_get("device_location_id")?,
+            model_mac: row.try_get("model_mac")?,
+            sensor_id: row.try_get("sensor_id")?,
+            client_name: row.try_get("client_name")?,
+            location_name: row.try_get("location_name")?,
+            variable_name: row.try_get("variable_name")?,
+            unit: row.try_get("unit")?,
+            min: row.try_get("min")?,
+            max: row.try_get("max")?,
+            offset: row.try_get("offset")?,
+            calibration_factor: row.try_get("calibration_factor")?,
+            alarms_details,
+        });
+    }
+
 
     Ok(sensor_devices)
 }
